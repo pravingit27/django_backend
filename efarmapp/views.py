@@ -1,12 +1,14 @@
 from django.shortcuts import render
-from rest_framework import generics,viewsets
+from rest_framework import generics,viewsets,mixins
 from rest_framework.permissions import AllowAny
-from .models import Category,Product,cart,Admin
+from .models import Category,Product,cart,Admin,order,calory
 from django.contrib.auth.models import User
-from .serializers import CategorySerializer,ProductSerializer,CartSerializer,RegisterSerializer
+from .serializers import CategorySerializer,ProductSerializer,CartSerializer,RegisterSerializer,OrderSerializer,CalorySerializer
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from rest_framework.decorators import action
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
 from django.contrib.auth import login,logout
 import re
 #from rest_framework import permissions
@@ -26,8 +28,8 @@ def signin(request):
 	#	return JsonResponse({'error':'Enter a valid username'})
 
 	#if usernamevalidation != True:	 
-     #   return "userName is not valid"
-     
+	 #   return "userName is not valid"
+	 
 
 	#if len(password)< 4:
 	#	return JsonResponse({'error':'password needs to be atleast 4 characters'})
@@ -86,6 +88,7 @@ class ListAdmin(viewsets.ModelViewSet):
 		except KeyError:
 			return[permission() for permission in self.permission_classes]
 
+
 class ListCategory(generics.ListCreateAPIView):
  #   permission_classes = (permissions.IsAuthenticated,)
 	queryset = Category.objects.all()
@@ -134,6 +137,50 @@ class DetailCart(generics.RetrieveUpdateDestroyAPIView):
 	#permission_classes = (permissions.IsAuthenticated,)
 	queryset = cart.objects.all()
 	serializer_class = CartSerializer
+
+#def add(request):
+#	if request.method == 'POST':
+#		transaction_id = request.POST['order_id']
+##		products = request.POST['products']
+#		seller = request.POST['seller']
+#
+#		total_pro = len(products.split(','[:-1]))
+
+#		ordr = order(product_names=products,total_product=total_pro,order_id=transaction_id,total_amount=amount,owner=seller)
+#		ordr.save()
+#		return JsonResponse({'success':True,'error':False,'msg':'order Placed Successfully'})
+
+
+class ListOrder(generics.ListAPIView):
+	"""This view provides list, detail, create, retrieve, update
+	and destroy actions for Products."""
+	queryset = order.objects.all()
+	serializer_class = OrderSerializer
+	lookup_field = 'id'
+
+
+class DetailOrder(generics.RetrieveUpdateDestroyAPIView):
+	queryset = order.objects.all()
+	serializer_class = OrderSerializer
+	lookup_field = 'id'
+
+class ListCalories(generics.ListCreateAPIView):
+	queryset = calory.objects.all()
+	serializer_class = CalorySerializer
+
+	def get_serializer(self, *args, **kwargs):
+		if "data" in kwargs:
+			data = kwargs["data"]
+
+		# check if many is required
+			if isinstance(data, list):
+				kwargs["many"] = True
+
+		return super(ListCalories, self).get_serializer(*args, **kwargs)
+
+class DetailCalories(generics.RetrieveUpdateDestroyAPIView):
+	queryset = calory.objects.all()
+	serializer_class = CalorySerializer
 
 	
 
